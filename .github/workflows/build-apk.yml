@@ -1,0 +1,32 @@
+name: Build APK
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: 🔹 تحميل المشروع
+        uses: actions/checkout@v4  # تم تحديثه إلى v4
+
+      - name: 🔹 إعداد البيئة
+        run: |
+          sudo apt update -y
+          sudo apt install -y python3 python3-pip openjdk-17-jdk zipalign aapt adb
+          pip install --upgrade pip
+          pip install --user buildozer cython
+
+      - name: 🔹 بناء ملف APK
+        run: |
+          export PATH=$HOME/.local/bin:$PATH
+          buildozer -v android debug
+
+      - name: 🔹 رفع ملف APK
+        uses: actions/upload-artifact@v4  # تم تحديثه إلى v4
+        with:
+          name: MyApp-APK
+          path: bin/*.apk  # تأكد من أن ملف APK يتم حفظه في هذا المسار
