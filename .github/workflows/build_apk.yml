@@ -1,0 +1,38 @@
+name: Build APK
+
+on: [push]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: استنساخ المشروع
+        uses: actions/checkout@v2
+
+      - name: تثبيت المتطلبات الأساسية
+        run: |
+          sudo apt update && sudo apt install -y \
+          python3 python3-pip python3-venv \
+          openjdk-17-jdk zipalign aapt adb \
+          libffi-dev libssl-dev
+
+      - name: تثبيت Buildozer و Cython
+        run: |
+          pip install --upgrade pip
+          pip install buildozer cython virtualenv
+      
+      - name: تثبيت متطلبات المشروع
+        run: |
+          if [ -f "requirements.txt" ]; then
+            pip install -r requirements.txt
+          fi
+
+      - name: إنشاء ملف APK
+        run: |
+          buildozer -v android debug
+
+      - name: رفع ملف APK
+        uses: actions/upload-artifact@v2
+        with:
+          name: myapp-apk
+          path: bin/*.apk
