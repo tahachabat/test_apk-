@@ -27,8 +27,25 @@ jobs:
             pip install -r requirements.txt
           fi
 
+      - name: 📥 تثبيت Android SDK و Build-Tools
+        run: |
+          sudo apt install -y wget unzip
+          wget https://dl.google.com/android/repository/commandlinetools-linux-10406996_latest.zip -O sdk-tools.zip
+          mkdir -p $HOME/android-sdk/cmdline-tools
+          unzip sdk-tools.zip -d $HOME/android-sdk/cmdline-tools
+          mv $HOME/android-sdk/cmdline-tools/cmdline-tools $HOME/android-sdk/cmdline-tools/latest
+          
+          export ANDROID_SDK_ROOT=$HOME/android-sdk
+          export PATH=$ANDROID_SDK_ROOT/cmdline-tools/latest/bin:$ANDROID_SDK_ROOT/platform-tools:$PATH
+          
+          yes | sdkmanager --licenses
+          sdkmanager --install "platform-tools" "platforms;android-31" "build-tools;31.0.0"
+
       - name: 🏗️ إنشاء ملف APK
-        run: buildozer -v android debug
+        run: |
+          export ANDROID_SDK_ROOT=$HOME/android-sdk
+          export PATH=$ANDROID_SDK_ROOT/cmdline-tools/latest/bin:$ANDROID_SDK_ROOT/platform-tools:$PATH
+          buildozer -v android debug
 
       - name: 🔍 التحقق من الملفات في bin/
         run: ls -lah bin/
