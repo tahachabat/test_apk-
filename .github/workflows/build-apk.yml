@@ -1,53 +1,58 @@
 name: Build APK
 
-on:
-  push:
-    branches:
-      - main
+on: [push]
 
 jobs:
   build:
     runs-on: ubuntu-latest
-
     steps:
-      - name: 🔹 تحميل المشروع
-        uses: actions/checkout@v4  # تم تحديثه إلى v4
+      - name: 🔄 استنساخ المشروع
+        uses: actions/checkout@v4
 
-      - name: 🔹 إعداد البيئة
+      - name: ⚙️ تثبيت المتطلبات الأساسية
         run: |
-          sudo apt update -y
-          sudo apt install -y python3 python3-pip openjdk-17-jdk zipalign aapt adb wget unzip
+          sudo apt update && sudo apt install -y \
+          python3 python3-pip python3-venv \
+          openjdk-17-jdk zipalign aapt adb \
+          libffi-dev libssl-dev wget unzip
+
+      - name: 📦 تثبيت Buildozer و Cython
+        run: |
           pip install --upgrade pip
-          pip install --user buildozer cython
+          pip install buildozer cython virtualenv
 
-      - name: 🔹 تحميل Android SDK Command-line Tools
+      - name: 📥 تثبيت Android SDK و Build-Tools
         run: |
+          wget https://dl.google.com/android/repository/commandlinetools-linux-11076708_latest.zip -O sdk-tools.zip
           mkdir -p $HOME/android-sdk/cmdline-tools
-          cd $HOME/android-sdk/cmdline-tools
-          wget https://dl.google.com/android/repository/commandlinetools-linux-10406996_latest.zip -O sdk-tools.zip
-          unzip sdk-tools.zip
-          mv cmdline-tools latest
+          unzip sdk-tools.zip -d $HOME/android-sdk/cmdline-tools
+          mv $HOME/android-sdk/cmdline-tools/cmdline-tools $HOME/android-sdk/cmdline-tools/latest
+          
           export ANDROID_HOME=$HOME/android-sdk
-          export PATH=$ANDROID_HOME/cmdline-tools/latest/bin:$ANDROID_HOME/platform-tools:$PATH
+          export ANDROID_SDK_ROOT=$HOME/android-sdk
+          export PATH=$ANDROID_SDK_ROOT/cmdline-tools/latest/bin:$ANDROID_SDK_ROOT/platform-tools:$PATH
+
           yes | sdkmanager --licenses
-        shell: bash
+          sdkmanager --install "platform-tools" "platforms;android-31" "build-tools;31.0.0"
 
-      - name: 🔹 تثبيت Android SDK Build-Tools
+      - name: 📂 تثبيت متطلبات المشروع
+        run: |
+          if [ -f "requirements.txt" ]; then
+            pip install -r requirements.txt
+          fi
+
+      - name: 🏗️ إنشاء ملف APK
         run: |
           export ANDROID_HOME=$HOME/android-sdk
-          export PATH=$ANDROID_HOME/cmdline-tools/latest/bin:$ANDROID_HOME/platform-tools:$PATH
-          sdkmanager "build-tools;34.0.0" "platforms;android-34" "platform-tools"
-
-      - name: 🔹 بناء ملف APK
-        run: |
-          export PATH=$HOME/.local/bin:$PATH
+          export ANDROID_SDK_ROOT=$HOME/android-sdk
+          export PATH=$ANDROID_SDK_ROOT/cmdline-tools/latest/bin:$ANDROID_SDK_ROOT/platform-tools:$PATH
           buildozer -v android debug
-      
-      - name: 🔹 التأكد من مسار ملف APK
-        run: find $GITHUB_WORKSPACE/bin -name "*.apk"
 
-      - name: 🔹 رفع ملف APK
+      - name: 🔍 التحقق من الملفات في bin/
+        run: ls -lah bin/
+
+      - name: 🚀 رفع ملف APK
         uses: actions/upload-artifact@v4
         with:
-          name: MyApp-APK
+          name: myapp-apk
           path: bin/*.apk
