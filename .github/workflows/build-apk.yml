@@ -24,6 +24,15 @@ jobs:
         run: |
           export PATH=$HOME/.local/bin:$PATH
           buildozer -v android debug
+      - name: Accept Licenses
+        run: yes | sdkmanager --licenses
+      
+      - name: Install Android SDK Build-Tools
+        run: sdkmanager "build-tools;36.0.0-rc5"
+      
+      - name: Install AIDL
+        run: sdkmanager "platform-tools" "platforms;android-34"
+      
 
       - name: 🔹 رفع ملف APK
         uses: actions/upload-artifact@v4  # تم تحديثه إلى v4
