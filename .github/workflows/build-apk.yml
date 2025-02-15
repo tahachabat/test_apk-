@@ -16,15 +16,27 @@ jobs:
       - name: 🔹 إعداد البيئة
         run: |
           sudo apt update -y
-          sudo apt install -y python3 python3-pip openjdk-17-jdk zipalign aapt adb
+          sudo apt install -y python3 python3-pip openjdk-17-jdk zipalign aapt adb wget unzip
           pip install --upgrade pip
           pip install --user buildozer cython
 
-      - name: 🔹 قبول رخصة Android SDK
-        run: yes | sdkmanager --licenses
+      - name: 🔹 تحميل Android SDK Command-line Tools
+        run: |
+          mkdir -p $HOME/android-sdk/cmdline-tools
+          cd $HOME/android-sdk/cmdline-tools
+          wget https://dl.google.com/android/repository/commandlinetools-linux-10406996_latest.zip -O sdk-tools.zip
+          unzip sdk-tools.zip
+          mv cmdline-tools latest
+          export ANDROID_HOME=$HOME/android-sdk
+          export PATH=$ANDROID_HOME/cmdline-tools/latest/bin:$ANDROID_HOME/platform-tools:$PATH
+          yes | sdkmanager --licenses
+        shell: bash
 
       - name: 🔹 تثبيت Android SDK Build-Tools
-        run: sdkmanager "build-tools;34.0.0" "platforms;android-34" "platform-tools"
+        run: |
+          export ANDROID_HOME=$HOME/android-sdk
+          export PATH=$ANDROID_HOME/cmdline-tools/latest/bin:$ANDROID_HOME/platform-tools:$PATH
+          sdkmanager "build-tools;34.0.0" "platforms;android-34" "platform-tools"
 
       - name: 🔹 بناء ملف APK
         run: |
@@ -38,4 +50,4 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: MyApp-APK
-          path: bin/*.apk  # تأكد من أن ملف APK يتم حفظه هنا
+          path: bin/*.apk
