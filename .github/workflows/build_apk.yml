@@ -1,6 +1,9 @@
 name: All Builds (Linux, macOS, Windows, Android, IPA, APK, AAB)
 
 on:
+- name: Install Flet
+  run: pip install flet
+
   # Runs on push to any of the below branches
   push:
     branches:
