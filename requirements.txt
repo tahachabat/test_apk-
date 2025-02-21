@@ -1,6 +1,1 @@
-cryptography
-pyautogui
-opencv-python
-sounddevice
-numpy
-scipy
+requests
